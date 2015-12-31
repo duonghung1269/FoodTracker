@@ -1,5 +1,5 @@
 //
-//  ViewController.swift
+//  MealViewController.swift
 //  FoodTracker
 //
 //  Created by Dang Duong Hung on 31/12/15.
@@ -8,18 +8,24 @@
 
 import UIKit
 
-class ViewController: UIViewController, UITextFieldDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+class MealViewController: UIViewController, UITextFieldDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     
     // MARK: Properties
-    @IBOutlet weak var mealNameLabel: UILabel!
     @IBOutlet weak var nameTextField: UITextField!
     @IBOutlet weak var photoImageView: UIImageView!
+    @IBOutlet weak var ratingControl: RatingControl!
+    @IBOutlet weak var saveButton: UIBarButtonItem!
+    
+    var meal: Meal?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         // Handle the text field's user input through delegate callbacks
         nameTextField.delegate = self;
+        
+        // Enable the Save button only if the text field has a valid Meal name
+        checkValidMealName()
     }
 
     override func didReceiveMemoryWarning() {
@@ -32,6 +38,22 @@ class ViewController: UIViewController, UITextFieldDelegate, UIImagePickerContro
         // hide the keyboard
         textField.resignFirstResponder();
         return true;
+    }
+    
+    func textFieldDidBeginEditing(textField: UITextField) {
+        // Disable the Save button while editing
+        saveButton.enabled = false
+    }
+    
+    func textFieldDidEndEditing(textField: UITextField) {
+        checkValidMealName()
+        navigationItem.title = textField.text
+    }
+    
+    func checkValidMealName() {
+        // DIsable the save button if the textfield is empty
+        let text = nameTextField.text ?? ""
+        saveButton.enabled = !text.isEmpty
     }
     
     // MARK: UIImagePickerControllerDelegate
@@ -51,6 +73,18 @@ class ViewController: UIViewController, UITextFieldDelegate, UIImagePickerContro
         dismissViewControllerAnimated(true, completion: nil)
     }
     
+    // MARK: Navigation
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        if saveButton === sender {
+            let name = nameTextField.text ?? ""
+            let photo = photoImageView.image
+            let rating = ratingControl.rating
+            
+            // Set the meal to be passed to MealTableVIewController after the unwind segue
+            meal = Meal(name: name, photo: photo, rating: rating)
+        }
+    }
+    
     // MARK: Actions
     
     @IBAction func selectImageFromPhotoLibrary(sender: UITapGestureRecognizer) {
@@ -62,19 +96,14 @@ class ViewController: UIViewController, UITextFieldDelegate, UIImagePickerContro
         // Only allow photos to be picked, not taken.
         imagePickerController.sourceType = .PhotoLibrary
         
-        // Make sure ViewController is notified when user picks an image
+        // Make sure MealViewController is notified when user picks an image
         imagePickerController.delegate = self
         
         presentViewController(imagePickerController, animated: true, completion: nil)
     }
 
-    @IBAction func setDefaultLabel(sender: UIButton) {
-        mealNameLabel.text = "Default Text"
+    @IBAction func cancel(sender: UIBarButtonItem) {
+        dismissViewControllerAnimated(true, completion: nil)
     }
-    
-    func textFieldDidEndEditing(textField: UITextField) {
-        mealNameLabel.text = textField.text;
-    }
-
 }
 
